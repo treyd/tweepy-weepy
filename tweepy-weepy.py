@@ -1,5 +1,6 @@
 import json
 import os
+
 import tweepy
 
 API_REQ_COUNT = 500
@@ -68,11 +69,13 @@ def my_stats(api):
 def list_tweets(api):
     tweet_list = _get_all_tweets(api)
 
+    data = ""
     for tweet in tweet_list:
-        print tweet.created_at
-        print tweet.text
-        print "-"
+        data += unicode(tweet.created_at) + '\n'
+        data += unicode(tweet.text) + '\n'
+        data += '-' + '\n'
 
+    print data
     return True
 
 
@@ -81,12 +84,15 @@ def wipe_timeline(api):
     tweet_list = _get_all_tweets(api)
     print "total tweets: %d" % len(tweet_list)
     print "This will DELETE ALL YOUR TWEETS"
+    print "you might want to go to https://twitter.com/settings/account" \
+          " and request your archive, if you care about it"
 
     confirm = raw_input('ARE YOU SURE? (type "yes" to continue): ')
 
     if confirm == 'yes':
         for tweet in tweet_list:
-            print "api.destroy_status(%s)" % tweet.id
+            api.destroy_status(tweet.id)
+            print "deleted %s" % tweet.id
 
     return True
 
