@@ -1,13 +1,12 @@
 import json
-import pprint
 import os
-
 import tweepy
+
+API_REQ_COUNT = 500
 
 CONSUMER_TOKEN = os.getenv('TWEEPY_CONSUMER_TOKEN')
 CONSUMER_SECRET = os.getenv('TWEEPY_CONSUMER_SECRET')
 ACCESS_CREDS_FILE = 'access.creds'
-
 
 auth = tweepy.OAuthHandler(consumer_key=CONSUMER_TOKEN,
                            consumer_secret=CONSUMER_SECRET)
@@ -36,6 +35,24 @@ def get_access_creds():
         json.dump(credsdict, credsfile)
 
 
+def _get_all_tweets(api):
+    last_id = None
+    tweet_list = []
+    tweets_fetched = api.user_timeline(count=API_REQ_COUNT)
+    while len(tweets_fetched) > 0:
+        tweet_list.extend(tweets_fetched)
+        print "got %d tweets" % len(tweets_fetched)
+        for tweet in tweets_fetched:
+            if not last_id:
+                last_id = tweet.id
+            elif tweet.id < last_id:
+                last_id = tweet.id
+
+        tweets_fetched = api.user_timeline(count=API_REQ_COUNT,
+                                           max_id=last_id - 1)
+    return tweet_list
+
+
 def exit_menu(api):
     return False
 
@@ -49,11 +66,29 @@ def my_stats(api):
 
 
 def list_tweets(api):
-    return
+    tweet_list = _get_all_tweets(api)
+
+    for tweet in tweet_list:
+        print tweet.created_at
+        print tweet.text
+        print "-"
+
+    return True
 
 
 def wipe_timeline(api):
-    return
+    print "counting tweets..."
+    tweet_list = _get_all_tweets(api)
+    print "total tweets: %d" % len(tweet_list)
+    print "This will DELETE ALL YOUR TWEETS"
+
+    confirm = raw_input('ARE YOU SURE? (type "yes" to continue): ')
+
+    if confirm == 'yes':
+        for tweet in tweet_list:
+            print "api.destroy_status(%s)" % tweet.id
+
+    return True
 
 
 MENU_CHOICES = (
