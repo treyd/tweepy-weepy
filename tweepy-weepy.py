@@ -58,6 +58,25 @@ def exit_menu(api):
     return False
 
 
+def lookup_user(api):
+    print "who would you like to look up?"
+    confirm = raw_input('username or id: ')
+
+    try:
+        tweeter = api.get_user(confirm)
+        print "User %s (%s)" % (tweeter.name, tweeter.screen_name)
+        print "Tweets: %d" % tweeter.statuses_count
+        print "Followers: %d" % tweeter.followers_count
+    except tweepy.TweepError, e:
+        print "got error from Twitter:"
+        print e.message
+    except Exception, e:
+        print "got some other error:"
+        print e.traceback
+
+    return True
+
+
 def my_stats(api):
     apiuser = api.me()
     print "User %s (%s)" % (apiuser.name, apiuser.screen_name)
@@ -101,6 +120,7 @@ MENU_CHOICES = (
     (1, 'my stats', my_stats),
     (2, 'list tweets', list_tweets),
     (3, 'wipe timeline', wipe_timeline),
+    (4, 'lookup user', lookup_user),
     (9, 'quit', exit_menu)
 )
 
@@ -113,13 +133,18 @@ def handle_choice(choice):
 
 def main_menu(api):
     apiuser = api.me()
+    print "-----"
     print "welcome %s" % apiuser.screen_name
     print "main menu:"
     for menuchoice in MENU_CHOICES:
         print "    %s: %s" % (menuchoice[0], menuchoice[1])
     choice = raw_input('choice: ')
 
-    return handle_choice(choice)(api)
+    try:
+        return handle_choice(choice)(api)
+    except TypeError:
+        print "invalid choice: %s" % choice
+        return True
 
 
 def main():
